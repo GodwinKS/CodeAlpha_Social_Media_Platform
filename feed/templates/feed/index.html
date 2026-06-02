@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>deOne Social Feed</title>
+</head>
+<body>
+    <h1>deOne Social</h1>
+    
+    <div style="max-width: 600px;">
+        
+        <!-- The Create Post Form -->
+        <div style="margin-bottom: 30px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
+            <h3 style="margin-top: 0;">Create a Post</h3>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+                    Post
+                </button>
+            </form>
+        </div>
+
+        {% for post in posts %}
+            <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
+                <h3 style="margin: 0;">
+    <a href="{% url 'profile' post.user.username %}" style="color: #007bff; text-decoration: none;">@{{ post.user.username }}</a>
+</h3>
+                <p style="font-size: 1.1em;">{{ post.content }}</p>
+                <small style="color: gray;">Posted on: {{ post.created_at|date:"M d, Y h:i A" }}</small>
+                
+                <div style="margin-top: 10px;">
+                    <form action="{% url 'like_post' post.pk %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none; border:none; color: #28a745; font-weight: bold; cursor: pointer; padding: 0; font-size: 1em;">
+                            {% if request.user in post.likes.all %}
+                                Unlike ({{ post.likes.count }})
+                            {% else %}
+                                Like ({{ post.likes.count }})
+                            {% endif %}
+                        </button>
+                    </form> | 
+                    <span>{{ post.comments.count }} Comments</span>
+                </div>
+
+                <!-- NEW: Display Comments & Reply Box -->
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    
+                    <!-- Loop through all comments for this specific post -->
+                    {% for comment in post.comments.all %}
+                        <p style="margin: 5px 0; font-size: 0.9em; background: #f1f1f1; padding: 8px; border-radius: 5px;">
+                            <strong>@{{ comment.user.username }}</strong>: {{ comment.content }}
+                        </p>
+                    {% endfor %}
+                    
+                    <!-- The input box to type a new comment -->
+                    <form action="{% url 'add_comment' post.pk %}" method="POST" style="margin-top: 10px;">
+                        {% csrf_token %}
+                        {{ comment_form.content }}
+                        <button type="submit" style="background-color: #6c757d; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
+                            Reply
+                        </button>
+                    </form>
+                </div>
+                <!-- END OF NEW COMMENTS BLOCK -->
+
+            </div>
+        {% empty %}
+            <p>The feed is completely empty. Add a test post in the admin panel!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
